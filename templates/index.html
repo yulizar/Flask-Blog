@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1> Hello world, saya sedang belajar flask</h1>
+<p> Bismillah, semoga lancar</p>
+
+{# ini adalah komentar, tidak akan muncul di rendered page #}
+
+<p>Method yang digunakan sekarang adalah : {{method.lower()}} </p>
+<p>Pencarian kamu adalah : {{ arguments['q'] }}</p>
+<p>Negara yg kamu pilih adalah : {{ arguments['negara'] }}</p>
+
+<ul>
+    {% for bahasa in arguments.getlist("bahasa") %}
+        {% if bahasa == "id" %}
+            <li>Indonesia</li>
+        {% elif bahasa == "ar" %}
+            <li> Arabic</li>
+        {% endif %}
+    {% endfor %}
+</ul>
+
+<footer>Made by : {{ author.lower() }}</footer>
+{% endblock %}
