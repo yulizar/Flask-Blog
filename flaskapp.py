@@ -1,7 +1,7 @@
 from flask import Flask,request, render_template
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-
+import datetime
 
 class Config:
     SQLALCHEMY_DATABASE_URI = "sqlite:///coba.db"
@@ -9,13 +9,14 @@ class Config:
 app = Flask(__name__)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
-migrate = Migrate(app)
+migrate = Migrate(app, db)
 
 class Post(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String(250))
     content = db.Column(db.Text())
-    created_at = db.Column(db.DateTime(), default="")
-    updated_at = db.Column(db.DateTime())
+    created_at = db.Column(db.DateTime(), default=datetime.datetime.now)
+    updated_at = db.Column(db.DateTime(), default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
 @app.route('/')
 def home():
