@@ -1,24 +1,75 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1> Hello world, saya sedang belajar flask</h1>
-<p> Bismillah, semoga lancar</p>
+{# {% for post in posts %}
+{{ post.title }}
+{% endfor %} #}
+<section id="main" class="container">
+    <section class="box special features">
+        <div class="features-row">
+            <section>
+                <span class="icon solid major fa-bolt accent2"></span>
+                <h3><a href="{{ url_for('post', pk=posts[0].id) }}">{{ posts[0].title }}</a></h3>
+                <p>{{ posts[0].content }}</p>
+                <ul class="actions">
+                    <li><a href="/posts/{{ posts[0].id }}" class="button alt center">Read More</a></li>
+                </ul>
+            </section>
+            <section>
+                <span class="icon solid major fa-chart-area accent3"></span>
+                <h3><a href="{{ url_for('post', pk=posts[1].id) }}">{{ posts[1].title }}</a></h3>
+                <p>{{ posts[1].content }}</p>
+                <ul class="actions">
+                    <li><a href="/posts/{{ posts[1].id }}" class="button alt center">Read More</a></li>
+                </ul>
+            </section>
+        </div>
+        <div class="features-row">
+            <section>
+                <span class="icon solid major fa-cloud accent4"></span>
+                <h3><a href="{{ url_for('post', pk=posts[2].id) }}">{{ posts[2].title }}</a></h3>
+                <p>{{ posts[2].content }}</p>
+                <ul class="actions">
+                    <li><a href="/posts/{{ posts[2].id }}" class="button alt center">Read More</a></li>
+                </ul>
+            </section>
+            <section>
+                <span class="icon solid major fa-lock accent5"></span>
+                <h3><a href="{{ url_for('post', pk=posts[3].id) }}">{{ posts[3].title }}</a></h3>
+                <p>{{ posts[3].content }}</p>
+                <ul class="actions">
+                    <li><a href="/posts/{{ posts[3].id }}" class="button alt center">Read More</a></li>
+                </ul>
+            </section>
+        </div>
+    </section>
+    <div class="row">
+        {% for category in categories %}
+        <div class="col-6 col-12-narrower">
 
-{# ini adalah komentar, tidak akan muncul di rendered page #}
+            <section class="box special">
+                <span class="image featured"><img src="{{ url_for('static', filename='images/pic02.jpg') }}"alt=""/></span>
+<!--                <h3></h3>-->
+                <p>{{ category.name }}</p>
+                <ul class="actions special">
+                    <li><a href="#" class="button alt">Learn More</a></li>
+                </ul>
+            </section>
 
-<p>Method yang digunakan sekarang adalah : {{method.lower()}} </p>
-<p>Pencarian kamu adalah : {{ arguments['q'] }}</p>
-<p>Negara yg kamu pilih adalah : {{ arguments['negara'] }}</p>
+        </div>
+        {% endfor %}
+        {#<div class="col-6 col-12-narrower">
 
-<ul>
-    {% for bahasa in arguments.getlist("bahasa") %}
-        {% if bahasa == "id" %}
-            <li>Indonesia</li>
-        {% elif bahasa == "ar" %}
-            <li> Arabic</li>
-        {% endif %}
-    {% endfor %}
-</ul>
-
-<footer>Made by : {{ author.lower() }}</footer>
-{% endblock %}
+            <section class="box special">
+                <span class="image featured"><img src="{{ url_for('static', filename='images/pic03.jpg') }}"alt=""/></span>
+                <h3>Accumsan integer</h3>
+                <p>Integer volutpat ante et accumsan commophasellus sed aliquam feugiat lorem aliquet ut enim rutrum
+                    phasellus iaculis accumsan dolore magna aliquam veroeros.</p>
+                <ul class="actions special">
+                    <li><a href="#" class="button alt">Learn More</a></li>
+                </ul>
+            </section>
+        </div> #}
+    </div>
+</section>
+{% endblock content %}
