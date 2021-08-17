@@ -7,7 +7,7 @@
         <p>A generic page for every non-generic situation.</p>
     </header>
     <div class="box">
-        <span class="image featured"><img src="{{ url_for('static', filename='images/pic01.jpg') }}" alt=""/></span>
+        <span class="image featured"><img src="{{ post.featured_image_url }}" alt=""/></span>
         <h3>{{ post.title }}</h3>
         <p>{{ post.content }}</p>
     </div>
