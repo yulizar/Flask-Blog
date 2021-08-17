@@ -1,19 +1,24 @@
+import click
 from flask import Flask, request, render_template, send_from_directory, url_for
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.form import ImageUploadField, thumbgen_filename
+from flask_login import current_user
 from flask_migrate import Migrate
+from flask_security import UserMixin, RoleMixin, Security, SQLAlchemyUserDatastore
 from flask_sqlalchemy import SQLAlchemy
 import datetime, os
 
 # config db
 from markupsafe import Markup
 from sqlalchemy.event import listens_for
+from werkzeug.utils import redirect
 
 
 class Config:
     SQLALCHEMY_DATABASE_URI = "postgresql://postgres:postgres@localhost/flask-blog"
     SECRET_KEY = "ini rahasia"
+    SECURITY_PASSWORD_SALT = "ini juga rahasia"
 
 # starting some apps
 app = Flask(__name__)
@@ -21,6 +26,34 @@ app.config.from_object(Config)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 admin = Admin(app, "blog") #register flask app
+
+# role for security
+roles_users = db.Table('roles_users',
+    db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
+    db.Column('role_id', db.Integer(), db.ForeignKey('role.id'))
+)
+
+class Role(db.Model, RoleMixin):
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(80), unique=True)
+    description = db.Column(db.String(255))
+
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(255), unique=True)
+    password = db.Column(db.String(255))
+    active = db.Column(db.Boolean())
+    confirmed_at = db.Column(db.DateTime())
+    roles = db.relationship('Role', secondary= roles_users,
+                            backref=db.backref('users', lazy='dynamic'))
+
+    def __repr__(self):
+        return self.email
+
+# Setup Flask Security
+user_datastore = SQLAlchemyUserDatastore(db, User, Role)
+security = Security(app, user_datastore)
+
 
 # Make an example table for Post
 class PostTag(db.Model):
@@ -43,6 +76,9 @@ class Post(db.Model):
 
     # Connecting to Tag
     tags = db.relationship("Tag", secondary=PostTag.__tablename__ , backref=db.backref("posts", lazy=True))
+
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    user = db.relationship("User", backref=db.backref("posts", lazy=True))
 
     def __repr__(self):
         return self.title
@@ -83,8 +119,18 @@ class Tag(db.Model):
         return self.name
 
 #register model view admin
+class LoginRequiredModelView(ModelView):
+    def is_accessible(self):
+        return current_user.is_active and current_user.is_authenticated and current_user.has_role("superuser")
 
-class PostModelView(ModelView):
+    def _handle_view(self, name, **kwargs):
+        if not self.is_accessible():
+            if current_user.is_authenticated:
+                os.abort(403)
+            else:
+                return redirect(url_for("security.login", next=request.url))
+
+class PostModelView(LoginRequiredModelView):
 
     # will be stored in path like media/featured_images/filename
     form_extra_fields = dict(
@@ -103,9 +149,17 @@ class PostModelView(ModelView):
 
     column_formatters = {"featured_image": _featured_image_column_formatter}
 
+    def on_model_change(self, form, model, is_created):
+        if is_created:
+            model.user = current_user
+            db.session.add(model)
+            db.session.commit()
+
+
+
 admin.add_view(PostModelView(Post, db.session))
-admin.add_view(ModelView(Category,db.session))
-admin.add_view(ModelView(Tag, db.session))
+admin.add_view(LoginRequiredModelView(Category,db.session))
+admin.add_view(LoginRequiredModelView(Tag, db.session))
 
 # Routing URL for flask
 @app.route('/')
@@ -131,9 +185,23 @@ def course(name, subtitle):
 def page_not_found(e):
     return render_template('404.html')
 
+@app.errorhandler(403)
+def page_forbidden(e):
+    return render_template('403.html')
+
 @app.route("/media/<path:filename>")
 def media(filename):
     return send_from_directory("media", filename)
+
+@app.cli.command("createsuperuser")
+@click.argument("email")
+@click.argument("password")
+def createsuperuser(email,password):
+    superuser = user_datastore.find_or_create_role("superuser")
+    user = user_datastore.create_user(email=email, password=password, roles=[superuser])
+    db.session.add(superuser)
+    db.session.add(user)
+    db.session.commit()
 
 if __name__ == "__main__":
     app.run(debug=True,port=7989)
