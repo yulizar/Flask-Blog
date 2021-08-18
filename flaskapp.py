@@ -13,19 +13,22 @@ import datetime, os
 from markupsafe import Markup
 from sqlalchemy.event import listens_for
 from werkzeug.utils import redirect
+from wtforms import TextAreaField
+from wtforms.widgets import TextArea
 
 
 class Config:
     SQLALCHEMY_DATABASE_URI = "postgresql://postgres:postgres@localhost/flask-blog"
     SECRET_KEY = "ini rahasia"
     SECURITY_PASSWORD_SALT = "ini juga rahasia"
+    SECURITY_POST_LOGIN_VIEW = "/admin"
 
 # starting some apps
 app = Flask(__name__)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-admin = Admin(app, "blog") #register flask app
+admin = Admin(app, "blog", base_template='admin/master_admin.html', template_mode='bootstrap3') #register flask app
 
 # role for security
 roles_users = db.Table('roles_users',
@@ -130,7 +133,23 @@ class LoginRequiredModelView(ModelView):
             else:
                 return redirect(url_for("security.login", next=request.url))
 
+class CKTextAreaWidget(TextArea):
+    def __call__(self, field, **kwargs):
+        if kwargs.get('class'):
+            kwargs['class'] += ' ckeditor'
+        else:
+            kwargs.setdefault('class', 'ckeditor')
+        return super(CKTextAreaWidget, self).__call__(field, **kwargs)
+
+class CKTextAreaField(TextAreaField):
+    widget = CKTextAreaWidget()
+
+
 class PostModelView(LoginRequiredModelView):
+    extra_js = ['//cdn.ckeditor.com/4.6.0/standard/ckeditor.js']
+
+    # to exclude some fields from built-in/standard view
+    form_excluded_columns = ['user','created_at', 'updated_at']
 
     # will be stored in path like media/featured_images/filename
     form_extra_fields = dict(
@@ -141,6 +160,10 @@ class PostModelView(LoginRequiredModelView):
             thumbnail_size=(200, 200, True)
         )
     )
+
+    form_overrides = {
+        'content' : CKTextAreaField
+    }
 
     def _featured_image_column_formatter(self, context, model,name):
         if not model.featured_image:
@@ -183,11 +206,11 @@ def course(name, subtitle):
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('404.html')
+    return render_template('PageNotFound.html')
 
 @app.errorhandler(403)
 def page_forbidden(e):
-    return render_template('403.html')
+    return render_template('forbidden.html')
 
 @app.route("/media/<path:filename>")
 def media(filename):
