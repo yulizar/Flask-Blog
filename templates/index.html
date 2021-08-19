@@ -2,7 +2,6 @@
 
 {% block content %}
 {# {% for post in posts %}
-{{ post.title }}
 {% endfor %} #}
 <section id="main" class="container">
     <section class="box special features">
@@ -36,7 +35,9 @@
             <section>
                 <span class="icon solid major fa-lock accent5"></span>
                 <h3><a href="{{ url_for('post', pk=posts[3].id) }}">{{ posts[3].title }}</a></h3>
-                <p>{{ posts[3].content }}</p>
+                {% autoescape off %}
+                {{ posts[3].content }}
+                {% endautoescape %}
                 <ul class="actions">
                     <li><a href="/posts/{{ posts[3].id }}" class="button alt center">Read More</a></li>
                 </ul>
