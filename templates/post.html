@@ -9,8 +9,10 @@
     <div class="box">
         <span class="image featured"><img src="{{ post.featured_image_url }}" alt=""/></span>
         <h3>{{ post.title }}</h3>
-        <p>{{ post.content }}</p>
+        {% autoescape off %}
+        {{ post.content }}
+        {% endautoescape %}
     </div>
-    <p class="disabled">{{ post.created_at.date().strftime('%d %b %Y') }}</p>
+    <p class="disabled">{{ post.created_at }}</p>
 </section>
 {% endblock %}
