@@ -191,18 +191,10 @@ def home():
     categories = Category.query.all()
     return render_template("index.html", categories=categories,posts=posts)
 
-@app.route("/hello")
-def hello():
-    return render_template("hello.html")
-
 @app.route("/posts/<pk>/")
 def post(pk):
     post = Post.query.get(pk)
     return render_template("post.html",post=post)
-
-@app.route("/course/<name>/<subtitle>")
-def course(name, subtitle):
-    return f"ini adalah halaman course {name} dengan subtitle {subtitle}"
 
 @app.errorhandler(404)
 def page_not_found(e):
